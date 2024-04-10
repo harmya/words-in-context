@@ -45,7 +45,7 @@ if __name__ == "__main__":
             if i % 2 == 0 else np.cos(k / 10000 ** (2 * i / d_embed)) for i in range(d_embed)])
 
     X = torch.zeros((len(dataset), d_embed * 3))
-    Y = tensor(np.array([data["output"] for data in dataset]))
+    Y = torch.tensor(np.array([data["output"] for data in dataset])).reshape(-1, 1).float()
 
     for i in range(len(dataset)):
         sentence_one = dataset[i]["sentence_one"]
@@ -66,9 +66,8 @@ if __name__ == "__main__":
         input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
         X[i] = input_data
 
-    print("X shape: ", X.shape)
-    print("Y shape: ", Y.shape)
-
+    dataset = torch.utils.data.TensorDataset(X, Y)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=64, shuffle=True)
 
     if args.neural_arch == "dan":
         model = DAN().to(torch_device)
@@ -83,12 +82,28 @@ if __name__ == "__main__":
         else:
             model = LSTM().to(torch_device)
 
-    loss = torch.nn.BCEWithLogitsLoss()
+    loss = torch.nn.BCELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    n_epochs = 30
+    
+    for epoch in range(n_epochs):
+        loss_avg = 0
+        for i, (X, Y) in enumerate(dataloader):
+            X = X.to(torch_device)
+            Y = Y.to(torch_device)
 
-    for i in range(5):
-        print("X[{}]: {}".format(i, X[i]))
-        print("Prediction: ", model(X[i].unsqueeze(0)))
+            optimizer.zero_grad()
+            output = model(X)
+            loss_val = loss(output, Y)
+            loss_val.backward()
+            optimizer.step()
+            loss_avg += loss_val.item()
+        
+        print(f"Epoch: {epoch} Loss: {loss_avg / n_epochs}")
 
-    # TODO: Testing loop
-    # Write predictions (F or T) for each test example into test.pred.txt
-    # One line per each example, in the same order as test.data.txt.
+
+    accuracy = torch.sum(torch.round(output) == Y) / len(Y)
+    print(f"Final Accuracy: {accuracy}")
+
+    print(f"Final Loss: {loss_avg / n_epochs}")
+    

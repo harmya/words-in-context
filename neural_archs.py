@@ -10,8 +10,7 @@ class DAN(torch.nn.Module):
         self.output_layer = torch.nn.Linear(64, 1)
 
     def forward(self, x):
-        return self.output_layer(torch.relu(self.second_hidden_layer(torch.relu(self.first_hidden_layer(x)))))
-
+        return torch.sigmoid(self.output_layer(torch.relu(self.second_hidden_layer(torch.relu(self.first_hidden_layer(x))))))
 
 class RNN(torch.nn.Module):
     def __init__(self):

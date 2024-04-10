@@ -4,20 +4,28 @@ import pandas as pd
 import os
 import re
 
-class WiCDataset(Dataset):
+class WiCDataset(Dataset, type="train"):
     def __init__(self):
         self.data = []
-        train_data_path = "train/train.data.txt"
-        train_data_output_path = "train/train.gold.txt"
+        if type == "train":
+            data_path = "train/train.data.txt"
+            data_output_path = "train/train.gold.txt"
+        elif type == "test":
+            data_path = "test/test.data.txt"
+            data_output_path = "test/test.gold.txt"
+        elif type == "dev":
+            data_path = "dev/dev.data.txt"
+            data_output_path = "dev/dev.gold.txt"
+
         train_data = None
         train_data_output = None
 
-        with open(train_data_output_path, "r") as f:
+        with open(data_output_path, "r") as f:
             train_data_output = f.read()
 
         train_data_output = np.array([1 if x == "T" else 0 for x in train_data_output.split("\n")])
 
-        with open(train_data_path, "r") as f:
+        with open(data_path, "r") as f:
             train_data = f.read()
 
         for data_point, output in zip(train_data.split("\n"), train_data_output):
