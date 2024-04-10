@@ -49,12 +49,12 @@ if __name__ == "__main__":
         sentence_one = dataset[i]["sentence_one"]
         sentence_two = dataset[i]["sentence_two"]
 
-        sentence_one = torch.tensor([glove_embs[word] for word in sentence_one.split() if word in glove_embs])
+        sentence_one = torch.tensor(np.array([glove_embs[word] for word in sentence_one.split() if word in glove_embs]))
         sentence_one = sentence_one.mean(dim=0)
         one_idx_pos_enc = get_positional_encoding(dataset[i]["one_index"], d_embed)
         sentence_one = sentence_one + one_idx_pos_enc
 
-        sentence_two = torch.tensor([glove_embs[word] for word in sentence_two.split() if word in glove_embs])
+        sentence_two = torch.tensor(np.array([glove_embs[word] for word in sentence_two.split() if word in glove_embs]))
         sentence_two = sentence_two.mean(dim=0)
         two_idx_pos_enc = get_positional_encoding(dataset[i]["two_index"], d_embed)
         sentence_two = sentence_two + two_idx_pos_enc
@@ -65,9 +65,6 @@ if __name__ == "__main__":
         X[i] = input_data
 
     print("X shape: ", X.shape)
-
-
-
 
 
     if args.neural_arch == "dan":
@@ -83,15 +80,11 @@ if __name__ == "__main__":
         else:
             model = LSTM().to(torch_device)
 
-    # TODO: Read off the WiC dataset files from the `WiC_dataset' directory
-    # (will be located in /homes/cs577/WiC_dataset/(train, dev, test))
-    # and initialize PyTorch dataloader appropriately
-    # Take a look at this page
-    # https://pytorch.org/tutorials/beginner/data_loading_tutorial.html
-    # and implement a PyTorch Dataset class for the WiC dataset in
-    # utils.py
+    loss = torch.nn.BCEWithLogitsLoss()
 
-    # TODO: Training and validation loop here
+    for i in range(5):
+        print("X[{}]: {}".format(i, X[i]))
+        print("Prediction: ", model(X[i].unsqueeze(0)))
 
     # TODO: Testing loop
     # Write predictions (F or T) for each test example into test.pred.txt

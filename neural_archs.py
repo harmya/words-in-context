@@ -5,7 +5,7 @@ d_embeddings = 50
 class DAN(torch.nn.Module):
     def __init__(self):
         super(DAN, self).__init__()
-        self.first_hidden_layer = torch.nn.Linear(d_embeddings + d_embeddings + d_embeddings, 64)
+        self.first_hidden_layer = torch.nn.Linear(3 * d_embeddings, 64)
         self.second_hidden_layer = torch.nn.Linear(64, 64)
         self.output_layer = torch.nn.Linear(64, 1)
 

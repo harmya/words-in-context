@@ -1,4 +1,5 @@
 from torch.utils.data import Dataset
+import numpy as np
 import pandas as pd
 import os
 import re
@@ -7,12 +8,19 @@ class WiCDataset(Dataset):
     def __init__(self):
         self.data = []
         train_data_path = "train/train.data.txt"
+        train_data_output_path = "train/train.gold.txt"
         train_data = None
+        train_data_output = None
+
+        with open(train_data_output_path, "r") as f:
+            train_data_output = f.read()
+
+        train_data_output = np.array([1 if x == "T" else 0 for x in train_data_output.split("\n")])
 
         with open(train_data_path, "r") as f:
             train_data = f.read()
 
-        for data_point in train_data.split("\n"):
+        for data_point, output in zip(train_data.split("\n"), train_data_output):
             attributes = data_point.split("\t")
             if len(attributes) == 5:
                 word = attributes[0]
@@ -27,9 +35,10 @@ class WiCDataset(Dataset):
                     "one_index": sent_one_index,
                     "two_index": sent_two_index,
                     "sentence_one": sentence_one,
-                    "sentence_two": sentence_two
+                    "sentence_two": sentence_two,
+                    "output": output
                 })
-                
+        
 
     def preprocess(self, sentence):
         sentence = sentence.lower()
@@ -44,3 +53,6 @@ class WiCDataset(Dataset):
     def __getitem__(self, idx):
         return self.data[idx]
 
+
+d = WiCDataset()
+print(d[0])
