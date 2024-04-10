@@ -87,7 +87,7 @@ if __name__ == "__main__":
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
     loss = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    n_epochs = 100
+    n_epochs = 70
     
     for epoch in range(n_epochs):
         loss_avg = 0
@@ -117,6 +117,8 @@ if __name__ == "__main__":
         Y_test = test_dataset.tensors[1]
         test_accuracy = sum(torch.round(Y_pred_test) == Y_test)[0] / len(test_dataset)
     
+    print("\n------------------------------------------")
+    print(f"Neural Architecture: {args.neural_arch}")
     print(f"Train Accuracy: {train_accuracy }")
     print(f"Test Accuracy: {test_accuracy }")
     print(f"Final Loss: {loss_avg / X.shape[0]}")
