@@ -14,14 +14,6 @@ torch.use_deterministic_algorithms(True)
 torch.manual_seed(577)
 torch_device = torch.device("cpu")
 
-'''
-NOTE: Do not change any of the statements above regarding random/numpy/pytorch.
-You can import other built-in libraries (e.g. collections) or pre-specified external libraries
-such as pandas, nltk and gensim below. 
-Also, if you'd like to declare some helper functions, please do so in utils.py and
-change the last import statement below.
-'''
-
 import gensim.downloader as api
 
 from neural_archs import DAN, RNN, LSTM
