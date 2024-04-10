@@ -44,30 +44,31 @@ if __name__ == "__main__":
         return torch.tensor([np.sin(k / 10000 ** (2 * i / d_embed)) 
             if i % 2 == 0 else np.cos(k / 10000 ** (2 * i / d_embed)) for i in range(d_embed)])
 
-    X = torch.zeros((len(dataset), d_embed * 3))
-    Y = torch.tensor(np.array([data["output"] for data in dataset])).reshape(-1, 1).float()
+    def get_X_Y_dataset(dataset):
+        X = torch.zeros((len(dataset), d_embed * 3))
+        Y = torch.tensor(np.array([data["output"] for data in dataset])).reshape(-1, 1).float()
 
-    for i in range(len(dataset)):
-        sentence_one = dataset[i]["sentence_one"]
-        sentence_two = dataset[i]["sentence_two"]
+        for i in range(len(dataset)):
+            sentence_one = dataset[i]["sentence_one"]
+            sentence_two = dataset[i]["sentence_two"]
 
-        sentence_one = torch.tensor(np.array([glove_embs[word] for word in sentence_one.split() if word in glove_embs]))
-        sentence_one = sentence_one.mean(dim=0)
-        one_idx_pos_enc = get_positional_encoding(dataset[i]["one_index"], d_embed)
-        sentence_one = sentence_one + one_idx_pos_enc
+            sentence_one = torch.tensor(np.array([glove_embs[word] for word in sentence_one.split() if word in glove_embs]))
+            sentence_one = sentence_one.mean(dim=0)
+            one_idx_pos_enc = get_positional_encoding(dataset[i]["one_index"], d_embed)
+            sentence_one = sentence_one + one_idx_pos_enc
 
-        sentence_two = torch.tensor(np.array([glove_embs[word] for word in sentence_two.split() if word in glove_embs]))
-        sentence_two = sentence_two.mean(dim=0)
-        two_idx_pos_enc = get_positional_encoding(dataset[i]["two_index"], d_embed)
-        sentence_two = sentence_two + two_idx_pos_enc
+            sentence_two = torch.tensor(np.array([glove_embs[word] for word in sentence_two.split() if word in glove_embs]))
+            sentence_two = sentence_two.mean(dim=0)
+            two_idx_pos_enc = get_positional_encoding(dataset[i]["two_index"], d_embed)
+            sentence_two = sentence_two + two_idx_pos_enc
 
-        word = torch.tensor(glove_embs[dataset[i]["word"]] if dataset[i]["word"] in glove_embs else np.zeros(d_embed))
+            word = torch.tensor(glove_embs[dataset[i]["word"]] if dataset[i]["word"] in glove_embs else np.zeros(d_embed))
 
-        input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
-        X[i] = input_data
+            input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
+            X[i] = input_data
 
-    dataset = torch.utils.data.TensorDataset(X, Y)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=64, shuffle=True)
+        dataset = torch.utils.data.TensorDataset(X, Y)
+        return dataset
 
     if args.neural_arch == "dan":
         model = DAN().to(torch_device)
@@ -82,6 +83,7 @@ if __name__ == "__main__":
         else:
             model = LSTM().to(torch_device)
 
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=64, shuffle=True)
     loss = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     n_epochs = 30
