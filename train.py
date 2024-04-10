@@ -50,14 +50,16 @@ if __name__ == "__main__":
         sentence_two = dataset[i]["sentence_two"]
 
         sentence_one = torch.tensor([glove_embs[word] for word in sentence_one.split() if word in glove_embs])
+        sentence_one = sentence_one.mean(dim=0)
         one_idx_pos_enc = get_positional_encoding(dataset[i]["one_index"], d_embed)
         sentence_one = sentence_one + one_idx_pos_enc
 
         sentence_two = torch.tensor([glove_embs[word] for word in sentence_two.split() if word in glove_embs])
+        sentence_two = sentence_two.mean(dim=0)
         two_idx_pos_enc = get_positional_encoding(dataset[i]["two_index"], d_embed)
         sentence_two = sentence_two + two_idx_pos_enc
 
-        word = torch.tensor(glove_embs[dataset[i]["word"]])
+        word = torch.tensor(glove_embs[dataset[i]["word"]] if dataset[i]["word"] in glove_embs else np.zeros(d_embed))
 
         input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
         X[i] = input_data
