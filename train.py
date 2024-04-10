@@ -45,6 +45,8 @@ if __name__ == "__main__":
             if i % 2 == 0 else np.cos(k / 10000 ** (2 * i / d_embed)) for i in range(d_embed)])
 
     X = torch.zeros((len(dataset), d_embed * 3))
+    Y = tensor(np.array([data["output"] for data in dataset]))
+
     for i in range(len(dataset)):
         sentence_one = dataset[i]["sentence_one"]
         sentence_two = dataset[i]["sentence_two"]
@@ -65,6 +67,7 @@ if __name__ == "__main__":
         X[i] = input_data
 
     print("X shape: ", X.shape)
+    print("Y shape: ", Y.shape)
 
 
     if args.neural_arch == "dan":

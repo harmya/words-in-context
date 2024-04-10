@@ -52,7 +52,3 @@ class WiCDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.data[idx]
-
-
-d = WiCDataset()
-print(d[0])
