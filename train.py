@@ -63,6 +63,8 @@ if __name__ == "__main__":
             sentence_two = sentence_two + two_idx_pos_enc
 
             word = torch.tensor(glove_embs[dataset[i]["word"]] if dataset[i]["word"] in glove_embs else np.zeros(d_embed))
+            word_type = torch.full((d_embed,), 1 if dataset[i]["word_type"] == "N" else 0)
+            word = torch.cat((word, word_type), dim=0)
 
             input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
             X[i] = input_data
@@ -87,7 +89,7 @@ if __name__ == "__main__":
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
     loss = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    n_epochs = 70
+    n_epochs = 50
     
     for epoch in range(n_epochs):
         loss_avg = 0
