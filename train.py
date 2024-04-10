@@ -87,7 +87,7 @@ if __name__ == "__main__":
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
     loss = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    n_epochs = 30
+    n_epochs = 100
     
     for epoch in range(n_epochs):
         loss_avg = 0
@@ -106,17 +106,18 @@ if __name__ == "__main__":
     train_accuracy = 0
     test_accuracy = 0
     test_dataset = WiCDataset(type="test")
-   
-    with torch.no_grad():
-        for i in range(len(train_dataset)):
-            Y_pred = model(train_dataset[i][0].to(torch_device))
-            train_accuracy += (Y_pred.item() >= 0.5) == train_dataset[i][1].item()
+    test_dataset = get_X_Y_dataset(test_dataset)
 
-        for i in range(len(test_dataset)):
-            Y_pred = model(test_dataset[i][0].to(torch_device))
-            test_accuracy += (Y_pred.item() >= 0.5) == test_dataset[i][1].item()
+    with torch.no_grad():
+        Y_pred_train = model(train_dataset.tensors[0])
+        Y_train = train_dataset.tensors[1]
+        train_accuracy = sum(torch.round(Y_pred_train) == Y_train)[0] / len(train_dataset)
+
+        Y_pred_test = model(test_dataset.tensors[0])
+        Y_test = test_dataset.tensors[1]
+        test_accuracy = sum(torch.round(Y_pred_test) == Y_test)[0] / len(test_dataset)
     
-    print(f"Train Accuracy: {train_accuracy / len(train_dataset)}")
-    print(f"Test Accuracy: {test_accuracy / len(test_dataset)}")
+    print(f"Train Accuracy: {train_accuracy }")
+    print(f"Test Accuracy: {test_accuracy }")
     print(f"Final Loss: {loss_avg / X.shape[0]}")
     
