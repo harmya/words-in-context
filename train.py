@@ -35,6 +35,8 @@ if __name__ == "__main__":
     if args.init_word_embs == "glove":
         glove_embs = api.load("glove-wiki-gigaword-50")
 
+    pad_token = glove_embs.keys()
+    print("Pad token: ", pad_token)
     d_embed = glove_embs.vector_size
     print("Embedding size: ", d_embed)
     
@@ -44,8 +46,10 @@ if __name__ == "__main__":
         return torch.tensor([np.sin(k / 10000 ** (2 * i / d_embed)) 
             if i % 2 == 0 else np.cos(k / 10000 ** (2 * i / d_embed)) for i in range(d_embed)])
 
-    def get_X_Y_dataset(dataset):
-        X = torch.zeros((len(dataset), d_embed * 3))
+    def get_X_Y_dataset(dataset, model=None):
+        
+
+        X = torch.zeros((len(dataset), d_embed * 4))
         Y = torch.tensor(np.array([data["output"] for data in dataset])).reshape(-1, 1).float()
 
         for i in range(len(dataset)):
@@ -89,7 +93,7 @@ if __name__ == "__main__":
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
     loss = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    n_epochs = 50
+    n_epochs = 60
     
     for epoch in range(n_epochs):
         loss_avg = 0
@@ -107,8 +111,13 @@ if __name__ == "__main__":
 
     train_accuracy = 0
     test_accuracy = 0
+    dev_accuracy = 0
+
     test_dataset = WiCDataset(type="test")
     test_dataset = get_X_Y_dataset(test_dataset)
+
+    dev_dataset = WiCDataset(type="dev")
+    dev_dataset = get_X_Y_dataset(dev_dataset)
 
     with torch.no_grad():
         Y_pred_train = model(train_dataset.tensors[0])
@@ -118,10 +127,15 @@ if __name__ == "__main__":
         Y_pred_test = model(test_dataset.tensors[0])
         Y_test = test_dataset.tensors[1]
         test_accuracy = sum(torch.round(Y_pred_test) == Y_test)[0] / len(test_dataset)
+
+        Y_pred_dev = model(dev_dataset.tensors[0])
+        Y_dev = dev_dataset.tensors[1]
+        dev_accuracy = sum(torch.round(Y_pred_dev) == Y_dev)[0] / len(dev_dataset)
     
     print("\n------------------------------------------")
     print(f"Neural Architecture: {args.neural_arch}")
     print(f"Train Accuracy: {train_accuracy }")
     print(f"Test Accuracy: {test_accuracy }")
-    print(f"Final Loss: {loss_avg / X.shape[0]}")
+    print(f"Dev Accuracy: {dev_accuracy }")
+    print("------------------------------------------\n")
     
