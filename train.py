@@ -38,7 +38,7 @@ if __name__ == "__main__":
     d_embed = glove_embs.vector_size
     print("Embedding size: ", d_embed)
     
-    dataset = WiCDataset()
+    dataset = WiCDataset(type="train")
 
     def get_positional_encoding(k, d_embed):
         return torch.tensor([np.sin(k / 10000 ** (2 * i / d_embed)) 
@@ -83,7 +83,8 @@ if __name__ == "__main__":
         else:
             model = LSTM().to(torch_device)
 
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=64, shuffle=True)
+    train_dataset = get_X_Y_dataset(dataset)
+    dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
     loss = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     n_epochs = 30
@@ -93,19 +94,29 @@ if __name__ == "__main__":
         for i, (X, Y) in enumerate(dataloader):
             X = X.to(torch_device)
             Y = Y.to(torch_device)
-
             optimizer.zero_grad()
-            output = model(X)
-            loss_val = loss(output, Y)
+            Y_pred = model(X)
+            loss_val = loss(Y_pred, Y)
             loss_val.backward()
             optimizer.step()
             loss_avg += loss_val.item()
-        
-        print(f"Epoch: {epoch} Loss: {loss_avg / n_epochs}")
 
+        print(f"Epoch: {epoch} Loss: {loss_avg / len(dataloader)}")
 
-    accuracy = torch.sum(torch.round(output) == Y) / len(Y)
-    print(f"Final Accuracy: {accuracy}")
+    train_accuracy = 0
+    test_accuracy = 0
+    test_dataset = WiCDataset(type="test")
+   
+    with torch.no_grad():
+        for i in range(len(train_dataset)):
+            Y_pred = model(train_dataset[i][0].to(torch_device))
+            train_accuracy += (Y_pred.item() >= 0.5) == train_dataset[i][1].item()
 
-    print(f"Final Loss: {loss_avg / n_epochs}")
+        for i in range(len(test_dataset)):
+            Y_pred = model(test_dataset[i][0].to(torch_device))
+            test_accuracy += (Y_pred.item() >= 0.5) == test_dataset[i][1].item()
+    
+    print(f"Train Accuracy: {train_accuracy / len(train_dataset)}")
+    print(f"Test Accuracy: {test_accuracy / len(test_dataset)}")
+    print(f"Final Loss: {loss_avg / X.shape[0]}")
     

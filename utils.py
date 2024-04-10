@@ -4,8 +4,8 @@ import pandas as pd
 import os
 import re
 
-class WiCDataset(Dataset, type="train"):
-    def __init__(self):
+class WiCDataset(Dataset):
+    def __init__(self, type="train"):
         self.data = []
         if type == "train":
             data_path = "train/train.data.txt"
