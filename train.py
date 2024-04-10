@@ -40,15 +40,31 @@ if __name__ == "__main__":
     
     dataset = WiCDataset()
 
+    def get_positional_encoding(k, d_embed):
+        return torch.tensor([np.sin(k / 10000 ** (2 * i / d_embed)) 
+            if i % 2 == 0 else np.cos(k / 10000 ** (2 * i / d_embed)) for i in range(d_embed)])
+
+    X = torch.zeros((len(dataset), d_embed * 3))
     for i in range(len(dataset)):
         sentence_one = dataset[i]["sentence_one"]
         sentence_two = dataset[i]["sentence_two"]
 
         sentence_one = torch.tensor([glove_embs[word] for word in sentence_one.split() if word in glove_embs])
-        
+        one_idx_pos_enc = get_positional_encoding(dataset[i]["one_index"], d_embed)
+        sentence_one = sentence_one + one_idx_pos_enc
 
         sentence_two = torch.tensor([glove_embs[word] for word in sentence_two.split() if word in glove_embs])
+        two_idx_pos_enc = get_positional_encoding(dataset[i]["two_index"], d_embed)
+        sentence_two = sentence_two + two_idx_pos_enc
+
         word = torch.tensor(glove_embs[dataset[i]["word"]])
+
+        input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
+        X[i] = input_data
+
+    print("X shape: ", X.shape)
+
+
 
 
 
