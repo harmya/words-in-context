@@ -15,7 +15,7 @@ class DAN(torch.nn.Module):
 class RNN(torch.nn.Module):
     def __init__(self):
         super(RNN, self).__init__()
-        self.rnn = torch.nn.RNN(input_size=d_embeddings, hidden_size=64, num_layers=2, batch_first=True)
+        self.rnn = torch.nn.RNN(input_size=d_embeddings, hidden_size=64, num_layers=2, batch_first=True, dropout=0.2)
         self.linear_1 = torch.nn.Linear(64, 32)
         self.output_layer = torch.nn.Linear(32, 1)
 
@@ -29,7 +29,7 @@ class RNN(torch.nn.Module):
 class LSTM(torch.nn.Module):
     def __init__(self):
         super(LSTM, self).__init__()
-        self.lstm = torch.nn.LSTM(input_size=d_embeddings, hidden_size=64, num_layers=1, batch_first=True)
+        self.lstm = torch.nn.LSTM(input_size=d_embeddings, hidden_size=64, num_layers=2, batch_first=True)
         self.linear_1 = torch.nn.Linear(64, 32)
         self.output_layer = torch.nn.Linear(32, 1)
 

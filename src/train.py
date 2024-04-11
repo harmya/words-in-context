@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
         if model == "dan":
             X = torch.zeros((len(dataset), d_embed * 4))
-        if model == "rnn":
+        if model == "rnn" or model == "lstm":
             X = torch.zeros((len(dataset), 64, d_embed))
 
         for i in range(len(dataset)):
@@ -77,7 +77,7 @@ if __name__ == "__main__":
                 input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
                 X[i] = input_data
 
-            elif model == "rnn":
+            elif model == "rnn" or model == "lstm":
                 if len(sentence_one) > 30:
                     print("Sentence one too long")
                     sentence_one = sentence_one[:30]
@@ -113,18 +113,26 @@ if __name__ == "__main__":
 
     learning_rate = None 
     batch_size = None
+    n_epochs = None
+
     if args.neural_arch == "dan":
         learning_rate = 0.001
         batch_size = 256
+        n_epochs = 80
     elif args.neural_arch == "rnn":
         learning_rate = 0.0005
         batch_size = 256
+        n_epochs = 160
+    elif args.neural_arch == "lstm":
+        learning_rate = 0.0005
+        batch_size = 256
+        n_epochs = 140
 
     train_dataset = get_X_Y_dataset(dataset, model=args.neural_arch)
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     loss = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-    n_epochs = 165
+
     
     for epoch in range(n_epochs):
         loss_avg = 0
