@@ -5,9 +5,9 @@ d_embeddings = 50
 class DAN(torch.nn.Module):
     def __init__(self, random_embedding=False, vocab_size=0):
         super(DAN, self).__init__()
-        self.first_layer = torch.nn.Linear(d_embeddings * 2, 64)
-        self.second_hidden_layer = torch.nn.Linear(64, 64)
-        self.output_layer = torch.nn.Linear(64, 1)
+        self.first_layer = torch.nn.Linear(d_embeddings * 2, 32)
+        self.second_hidden_layer = torch.nn.Linear(32, 32)
+        self.output_layer = torch.nn.Linear(32, 1)
 
     def forward(self, x):
         return torch.sigmoid(self.output_layer(torch.relu(self.second_hidden_layer(torch.relu(self.first_layer(x))))))

@@ -116,8 +116,8 @@ if __name__ == "__main__":
 
     if args.neural_arch == "dan":
         learning_rate = 1e-4
-        batch_size = 128
-        n_epochs = 100
+        batch_size = 256
+        n_epochs = 280
     elif args.neural_arch == "rnn":
         learning_rate = 0.001
         batch_size = 128
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     elif args.neural_arch == "lstm":
         learning_rate = 0.001
         batch_size = 128
-        n_epochs = 50
+        n_epochs = 70
 
     train_dataset = get_X_Y_dataset(dataset, model=args.neural_arch)
 
@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     loss = torch.nn.BCELoss()
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
     training_loss = []
     val_loss = []
