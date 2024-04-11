@@ -28,10 +28,12 @@ class RNN(torch.nn.Module):
 
 class LSTM(torch.nn.Module):
     def __init__(self):
-        # TODO: Declare LSTM model architecture
         super(LSTM, self).__init__()
+        self.lstm = torch.nn.LSTM(input_size=d_embeddings, hidden_size=64, num_layers=1, batch_first=True)
+        self.linear_1 = torch.nn.Linear(64, 32)
+        self.output_layer = torch.nn.Linear(32, 1)
+
 
 
     def forward(self, x):
-        # TODO: Implement LSTM forward pass
-        pass
+        return torch.sigmoid(self.output_layer(torch.relu(self.linear_1(self.lstm(x)[0][:, -1, :]))))
