@@ -7,8 +7,12 @@ def get_positional_encoding(k, d_embed):
         if i % 2 == 0 else np.cos(k / 10000 ** (2 * i / d_embed)) for i in range(d_embed)])
 
 class DAN(torch.nn.Module):
-    def __init__(self, pre_trained=False, embedding_matrix=None, vocob_size=None):
+    def __init__(self, pre_trained=False, embedding_matrix=None, vocab_size=None):
         super(DAN, self).__init__()
+        print("Embedding size: ", d_embeddings)
+        print("Vocab size: ", vocab_size)
+        print("embedding_matrix: ", embedding_matrix)   
+
         if pre_trained:
             self.embedding = torch.nn.Embedding.from_pretrained(embedding_matrix)
         else:

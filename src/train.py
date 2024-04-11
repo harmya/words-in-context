@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     def get_X_Y_dataset(model=None, type="train"):
         dataset = WiCDataset(type=type)
-        X = None
+        X = np.array([])
         Y = torch.tensor(np.array([data["output"] for data in dataset])).reshape(-1, 1).float()
 
         for i in range(len(dataset)):
@@ -55,8 +55,7 @@ if __name__ == "__main__":
             word_type = [dataset.__getitem__(i)["word_type"]]
             
             if model == "dan":
-                print(sentence_one, sentence_two, word, word_type)
-                X = np.concatenate((sentence_one, sentence_two, word, word_type), axis=0)
+                X.append(np.concatenate((sentence_one, sentence_two, word), axis=0))
 
             elif model == "rnn" or model == "lstm":
                 if len(sentence_one) > 30:
@@ -70,7 +69,7 @@ if __name__ == "__main__":
                 else:
                     sentence_two = np.concatenate((sentence_two, np.zeros((30 - len(sentence_two), d_embed))), axis=0)
 
-                X = np.concatenate((sentence_one, sentence_two, word), axis=0)
+                X.append(np.concatenate((sentence_one, sentence_two, word), axis=0))
 
         dataset = X, Y
         return dataset
@@ -83,9 +82,10 @@ if __name__ == "__main__":
     learning_rate = None 
     batch_size = None
     n_epochs = None
+    pre_trained = False
 
     if args.neural_arch == "dan":
-        model = DAN().to(torch_device)
+        model = DAN(pre_trained, glove_embs, vocob_size).to(torch_device)
         learning_rate = 0.0001
         batch_size = 32
         n_epochs = 200
