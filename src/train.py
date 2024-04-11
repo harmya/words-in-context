@@ -141,6 +141,7 @@ if __name__ == "__main__":
 
     training_loss = []
     val_loss = []
+    test_loss = []
 
     def validation_loss(model):
         val_dataloader = torch.utils.data.DataLoader(dev_dataset, batch_size=batch_size, shuffle=True)
@@ -153,6 +154,7 @@ if __name__ == "__main__":
                 loss_val = loss(Y_pred, Y)
                 loss_avg += loss_val.item()
             return loss_avg / len(val_dataloader)
+
     def test_loss(model):
         test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
         with torch.no_grad():
@@ -181,6 +183,7 @@ if __name__ == "__main__":
         print(f"Epoch: {epoch + 1}, Loss: {loss_avg / len(dataloader)}")
         val_loss.append(validation_loss(model))
         training_loss.append(loss_avg / len(dataloader))
+        test_loss.append(test_loss(model))
 
     train_accuracy = 0
     test_accuracy = 0
@@ -214,6 +217,7 @@ if __name__ == "__main__":
         
     plt.plot(training_loss, label="Training Loss")
     plt.plot(val_loss, label="Validation Loss")
+    plt.plot(test_loss, label="Test Loss")
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
     plt.legend()
