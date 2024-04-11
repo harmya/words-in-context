@@ -20,15 +20,14 @@ class RNN(torch.nn.Module):
 
         self.rnn = torch.nn.RNN(input_size=d_embeddings, hidden_size=32, num_layers=1, batch_first=True, bidirectional=bidirectional)
         self.linear_for_rnns = torch.nn.Linear(32 * 2 * num_directions, 32)
-        self.linear_with_word = torch.nn.Linear(32 + d_embeddings, 32)
+        self.linear = torch.nn.Linear(32, 32)
         self.output_layer = torch.nn.Linear(32, 1)
 
     def forward(self, x):
         output_1, hidden_1 = self.rnn(x[:, :30, :])
         output_2, hidden_2 = self.rnn(x[:, 30:60, :])
         combined_hidden = torch.relu(self.linear_for_rnns(torch.cat((output_1[:, -1], output_2[:, -1]), dim=1)))
-        combined_with_word = torch.cat((combined_hidden, x[:, 60, :]), dim=1)
-        return torch.sigmoid(self.output_layer(torch.relu(self.linear_with_word(combined_with_word))))
+        return torch.sigmoid(self.output_layer(torch.relu(self.linear(combined_hidden))))
 
 
 class LSTM(torch.nn.Module):

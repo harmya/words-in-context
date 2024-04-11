@@ -117,15 +117,15 @@ if __name__ == "__main__":
     if args.neural_arch == "dan":
         learning_rate = 1e-4
         batch_size = 128
-        n_epochs = 10000
+        n_epochs = 100
     elif args.neural_arch == "rnn":
         learning_rate = 0.001
-        batch_size = 32
-        n_epochs = 90
+        batch_size = 128
+        n_epochs = 50
     elif args.neural_arch == "lstm":
         learning_rate = 0.001
-        batch_size = 64
-        n_epochs = 40
+        batch_size = 128
+        n_epochs = 50
 
     train_dataset = get_X_Y_dataset(dataset, model=args.neural_arch)
 
@@ -195,6 +195,12 @@ if __name__ == "__main__":
     print(f"Dev Accuracy: {dev_accuracy }")
     print("------------------------------------------\n")
 
+    # send test_output to file
+    with open("test_output.txt", "w") as f:
+        for i in range(len(Y_pred_test)):
+            label = "T" if Y_pred_test[i] > 0.5 else "F"
+            f.write(f"{label}\n")
+        
     plt.plot(training_loss, label="Training Loss")
     plt.plot(val_loss, label="Validation Loss")
     plt.xlabel("Epochs")
