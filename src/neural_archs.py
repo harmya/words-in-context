@@ -15,8 +15,8 @@ class DAN(torch.nn.Module):
 class RNN(torch.nn.Module):
     def __init__(self):
         super(RNN, self).__init__()
-        self.rnn_sent_one = torch.nn.RNN(input_size=d_embeddings, hidden_size=64, num_layers=2, batch_first=True)
-        self.rnn_sent_two = torch.nn.RNN(input_size=d_embeddings, hidden_size=64, num_layers=2, batch_first=True)
+        self.rnn_sent_one = torch.nn.RNN(input_size=d_embeddings, hidden_size=64, num_layers=2, batch_first=True, dropout=0.2)
+        self.rnn_sent_two = torch.nn.RNN(input_size=d_embeddings, hidden_size=64, num_layers=2, batch_first=True, dropout=0.2)
         self.linear_for_rnns = torch.nn.Linear(64 * 2, 32)
         self.linear_with_word = torch.nn.Linear(32 + d_embeddings, 32)
         self.output_layer = torch.nn.Linear(32, 1)
