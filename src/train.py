@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # that achieved the best performance for your case
     parser.add_argument('--neural_arch', choices=['dan', 'rnn', 'lstm'], default='dan', type=str)
     parser.add_argument('--rnn_bidirect', default=False, action='store_true')
-    parser.add_argument('--init_word_embs', choices=['scratch', 'glove'], default='scratch', type=str)
+    parser.add_argument('--init_word_embs', choices=['scratch', 'glove'], default='glove', type=str)
 
     args = parser.parse_args()
 
@@ -42,12 +42,12 @@ if __name__ == "__main__":
     print("Vocab size: ", vocob_size)
     dataset = WiCDataset(type="train")
     
+
     def get_positional_encoding(k, d_embed):
         return torch.tensor([np.sin(k / 10000 ** (2 * i / d_embed)) 
             if i % 2 == 0 else np.cos(k / 10000 ** (2 * i / d_embed)) for i in range(d_embed)])
 
     def get_X_Y_dataset(dataset, model=None):
-        
         X = None
         Y = torch.tensor(np.array([data["output"] for data in dataset])).reshape(-1, 1).float()
 
@@ -73,6 +73,8 @@ if __name__ == "__main__":
                 sentence_two[j] = sentence_two[j] + get_positional_encoding(j, d_embed)
             
             if model == "dan":
+                # normalize the sentence embeddings
+
                 sentence_one = sentence_one.mean(dim=0)
                 sentence_two = sentence_two.mean(dim=0)
                 word = torch.cat((word_type, word), dim=0)
@@ -87,7 +89,7 @@ if __name__ == "__main__":
                     sentence_one = torch.cat((sentence_one, torch.zeros((30 - len(sentence_one), d_embed))), dim=0)
 
                 if len(sentence_two) > 30:
-                    sentence_two = sentence_two[:25]
+                    sentence_two = sentence_two[:30]
                 else:
                     sentence_two = torch.cat((sentence_two, torch.zeros((30 - len(sentence_two), d_embed))), dim=0)
 
@@ -118,7 +120,7 @@ if __name__ == "__main__":
     if args.neural_arch == "dan":
         learning_rate = 0.0001
         batch_size = 32
-        n_epochs = 200
+        n_epochs = 150
     elif args.neural_arch == "rnn":
         learning_rate = 0.001
         batch_size = 32
@@ -141,12 +143,16 @@ if __name__ == "__main__":
     val_loss = []
 
     def validation_loss(model):
+        val_dataloader = torch.utils.data.DataLoader(dev_dataset, batch_size=batch_size, shuffle=True)
         with torch.no_grad():
-            dataset = dev_dataset
-            X = dataset.tensors[0].to(torch_device)
-            Y = dataset.tensors[1].to(torch_device)
-            Y_pred = model(X)
-            return loss(Y_pred, Y).item()
+            loss_avg = 0
+            for i, (X, Y) in enumerate(val_dataloader):
+                X = X.to(torch_device)
+                Y = Y.to(torch_device)
+                Y_pred = model(X)
+                loss_val = loss(Y_pred, Y)
+                loss_avg += loss_val.item()
+            return loss_avg / len(val_dataloader)
     
     for epoch in range(n_epochs):
         loss_avg = 0
@@ -161,8 +167,8 @@ if __name__ == "__main__":
             optimizer.step()
             loss_avg += loss_val.item()
 
-        
-        val_loss.append(validation_loss(model))
+        print(f"Epoch: {epoch + 1}, Loss: {loss_avg / len(dataloader)}")
+        #val_loss.append(validation_loss(model))
         training_loss.append(loss_avg / len(dataloader))
 
     train_accuracy = 0
@@ -191,11 +197,12 @@ if __name__ == "__main__":
     print(f"Test Accuracy: {test_accuracy }")
     print(f"Dev Accuracy: {dev_accuracy }")
     print("------------------------------------------\n")
-
+    '''
     plt.plot(training_loss, label="Training Loss")
     plt.plot(val_loss, label="Validation Loss")
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
     plt.legend()
     plt.show()
+    '''
     

@@ -3,6 +3,9 @@ import numpy as np
 import pandas as pd
 import os
 import re
+from nltk.corpus import stopwords
+
+stop_words = set(stopwords.words('english'))
 
 class WiCDataset(Dataset):
     def __init__(self, type="train"):
@@ -62,6 +65,9 @@ class WiCDataset(Dataset):
         sentence = sentence.lower()
         sentence = re.sub(r"[^a-z]+", " ", sentence)
         sentence = re.sub(r"\s+", " ", sentence)
+        sentence = " ".join([word for word in sentence.split() if word not in stop_words])
+        if len(sentence.split()) == 0:
+            sentence = "empty"
         return sentence.strip()
 
 
