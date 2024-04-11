@@ -37,9 +37,10 @@ if __name__ == "__main__":
 
     d_embed = glove_embs.vector_size
     print("Embedding size: ", d_embed)
-    
+    vocob_size = len(glove_embs.key_to_index)
+    print("Vocab size: ", vocob_size)
     dataset = WiCDataset(type="train")
-
+    
     def get_positional_encoding(k, d_embed):
         return torch.tensor([np.sin(k / 10000 ** (2 * i / d_embed)) 
             if i % 2 == 0 else np.cos(k / 10000 ** (2 * i / d_embed)) for i in range(d_embed)])
@@ -114,9 +115,9 @@ if __name__ == "__main__":
     n_epochs = None
 
     if args.neural_arch == "dan":
-        learning_rate = 0.001
+        learning_rate = 0.0001
         batch_size = 32
-        n_epochs = 60
+        n_epochs = 200
     elif args.neural_arch == "rnn":
         learning_rate = 0.001
         batch_size = 32
@@ -127,10 +128,21 @@ if __name__ == "__main__":
         n_epochs = 40
 
     train_dataset = get_X_Y_dataset(dataset, model=args.neural_arch)
+
+    dev_dataset = WiCDataset(type="dev")
+    dev_dataset = get_X_Y_dataset(dev_dataset, model=args.neural_arch)
+
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     loss = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
+    def validation_loss(model):
+        with torch.no_grad():
+            dataset = dev_dataset
+            X = dataset.tensors[0].to(torch_device)
+            Y = dataset.tensors[1].to(torch_device)
+            Y_pred = model(X)
+            return loss(Y_pred, Y).item()
     
     for epoch in range(n_epochs):
         loss_avg = 0
@@ -144,7 +156,10 @@ if __name__ == "__main__":
             optimizer.step()
             loss_avg += loss_val.item()
 
-        print(f"Epoch: {epoch} Loss: {loss_avg / len(dataloader)}")
+        if epoch % 5 == 0:
+            print(f"Validation loss: {validation_loss(model)}")
+        
+        #print(f"Epoch: {epoch} Loss: {loss_avg / len(dataloader)}")
 
     train_accuracy = 0
     test_accuracy = 0
@@ -152,9 +167,6 @@ if __name__ == "__main__":
 
     test_dataset = WiCDataset(type="test")
     test_dataset = get_X_Y_dataset(test_dataset, model=args.neural_arch)
-
-    dev_dataset = WiCDataset(type="dev")
-    dev_dataset = get_X_Y_dataset(dev_dataset, model=args.neural_arch)
 
     with torch.no_grad():
         Y_pred_train = model(train_dataset.tensors[0])
