@@ -196,7 +196,7 @@ if __name__ == "__main__":
     print("------------------------------------------\n")
 
     # send test_output to file
-    with open("test_output.txt", "w") as f:
+    with open("test.pred.txt", "w") as f:
         for i in range(len(Y_pred_test)):
             label = "T" if Y_pred_test[i] > 0.5 else "F"
             f.write(f"{label}\n")
