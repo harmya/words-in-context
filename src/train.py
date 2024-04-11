@@ -118,7 +118,7 @@ if __name__ == "__main__":
         batch_size = 32
         n_epochs = 60
     elif args.neural_arch == "rnn":
-        learning_rate = 0.0005
+        learning_rate = 0.001
         batch_size = 32
         n_epochs = 60
     elif args.neural_arch == "lstm":
