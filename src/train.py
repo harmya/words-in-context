@@ -33,13 +33,20 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     glove_embs = None
+    word_to_index = None
+
     if args.init_word_embs == "glove":
         glove_embs = api.load("glove-wiki-gigaword-50")
+        word_to_index = {word: glove_embs.key_to_index[word] for word in glove_embs.key_to_index}
+    else:
+        glove_embs = None
 
     d_embed = glove_embs.vector_size
     print("Embedding size: ", d_embed)
-    vocob_size = len(glove_embs.key_to_index)
-    print("Vocab size: ", vocob_size)
+    vocab_size = len(glove_embs.key_to_index)
+    print("Vocab size: ", vocab_size)
+
+
 
     def get_X_Y_dataset(model=None, type="train"):
         dataset = WiCDataset(type=type)
@@ -55,7 +62,7 @@ if __name__ == "__main__":
             word_type = [dataset.__getitem__(i)["word_type"]]
             
             if model == "dan":
-                X.append(np.concatenate((sentence_one, sentence_two, word), axis=0))
+                np.append(X, np.array([sentence_one, sentence_two, word]))
 
             elif model == "rnn" or model == "lstm":
                 if len(sentence_one) > 30:
@@ -69,7 +76,7 @@ if __name__ == "__main__":
                 else:
                     sentence_two = np.concatenate((sentence_two, np.zeros((30 - len(sentence_two), d_embed))), axis=0)
 
-                X.append(np.concatenate((sentence_one, sentence_two, word), axis=0))
+                np.append(X, np.array([sentence_one, sentence_two, word]))
 
         dataset = X, Y
         return dataset
@@ -85,7 +92,7 @@ if __name__ == "__main__":
     pre_trained = False
 
     if args.neural_arch == "dan":
-        model = DAN(pre_trained, glove_embs, vocob_size).to(torch_device)
+        model = DAN(pre_trained, glove_embs, vocab_size).to(torch_device)
         learning_rate = 0.0001
         batch_size = 32
         n_epochs = 200

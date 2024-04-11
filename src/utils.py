@@ -9,6 +9,7 @@ class WiCDataset(Dataset):
         self.data = []
         train_data = None
         train_data_output = None
+        self.word_to_index = {}
 
         if type == "train":
             data_path = "../train/train.data.txt"
@@ -46,6 +47,15 @@ class WiCDataset(Dataset):
                     "sentence_two": sentence_two,
                     "output": output
                 })
+
+                if word not in self.word_to_index:
+                    self.word_to_index[word] = len(self.word_to_index)
+                for word in sentence_one.split():
+                    if word not in self.word_to_index:
+                        self.word_to_index[word] = len(self.word_to_index)
+                for word in sentence_two.split():
+                    if word not in self.word_to_index:
+                        self.word_to_index[word] = len(self.word_to_index)
         
 
     def preprocess(self, sentence):

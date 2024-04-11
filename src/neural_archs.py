@@ -15,8 +15,10 @@ class DAN(torch.nn.Module):
 
         if pre_trained:
             self.embedding = torch.nn.Embedding.from_pretrained(embedding_matrix)
+            self.embedding.weight.requires_grad = True #allow fine-tuning
         else:
-            self.embedding = torch.nn.Embedding(vocob_size, d_embeddings)
+            self.embedding = torch.nn.Embedding(vocab_size, d_embeddings)
+            self.embedding.weight.requires_grad = True #allow training
 
         self.first_layer = torch.nn.Linear(4 * d_embeddings, 512)
         self.dropout = torch.nn.Dropout(0.5)
@@ -25,7 +27,7 @@ class DAN(torch.nn.Module):
         self.output_layer = torch.nn.Linear(512, 1)
 
     def forward(self, x):
-        sentence_one = torch.mean(self.embedding(x[:, :30]), dim=1)
+        sentence_one = torch.mean(self.embedding(x[:, 0]), dim=1)
         print(sentence_one.shape)
         sentence_two = torch.mean(self.embedding(x[:, 30:60]), dim=1)
         word = self.embedding(x[:, 60])
