@@ -15,13 +15,14 @@ class DAN(torch.nn.Module):
 class RNN(torch.nn.Module):
     def __init__(self):
         super(RNN, self).__init__()
-        self.rnn = torch.nn.RNN(input_size=4 * d_embeddings, hidden_size=64, num_layers=1, batch_first=True)
-        self.output_layer = torch.nn.Linear(64, 1)
+        self.rnn = torch.nn.RNN(input_size=d_embeddings, hidden_size=64, num_layers=2, batch_first=True)
+        self.linear = torch.nn.Linear(64, 32)
+        self.output_layer = torch.nn.Linear(32, 1)
 
 
     def forward(self, x):
         _, h_n = self.rnn(x)
-        return torch.sigmoid(self.output_layer(h_n[-1]))
+        return torch.sigmoid(self.output_layer(torch.relu(self.linear(h_n[-1]))))
 
 
 class LSTM(torch.nn.Module):
@@ -33,6 +34,3 @@ class LSTM(torch.nn.Module):
     def forward(self, x):
         # TODO: Implement LSTM forward pass
         pass
-
-rnn = RNN()
-

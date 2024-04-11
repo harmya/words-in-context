@@ -46,9 +46,13 @@ if __name__ == "__main__":
 
     def get_X_Y_dataset(dataset, model=None):
         
-
-        X = torch.zeros((len(dataset), d_embed * 4))
+        X = None
         Y = torch.tensor(np.array([data["output"] for data in dataset])).reshape(-1, 1).float()
+
+        if model == "dan":
+            X = torch.zeros((len(dataset), d_embed * 4))
+        if model == "rnn":
+            X = torch.zeros((len(dataset), 64, d_embed))
 
         for i in range(len(dataset)):
             sentence_one = dataset[i]["sentence_one"]
@@ -57,22 +61,39 @@ if __name__ == "__main__":
             sentence_two = torch.tensor(np.array([glove_embs[word] for word in sentence_two.split() if word in glove_embs]))
             one_idx = dataset[i]["one_index"]
             two_idx = dataset[i]["two_index"]
-            
+            word = torch.tensor(glove_embs[dataset[i]["word"]] if dataset[i]["word"] in glove_embs else np.zeros(d_embed))
+            word_type = torch.full((d_embed,), 1 if dataset[i]["word_type"] == "N" else 0)
+
             for j in range(len(sentence_one)):
                 sentence_one[j] = sentence_one[j] + get_positional_encoding(j, d_embed)
             
             for j in range(len(sentence_two)):
                 sentence_two[j] = sentence_two[j] + get_positional_encoding(j, d_embed)
             
-            sentence_one = sentence_one.mean(dim=0)
-            sentence_two = sentence_two.mean(dim=0)
+            if model == "dan":
+                sentence_one = sentence_one.mean(dim=0)
+                sentence_two = sentence_two.mean(dim=0)
+                word = torch.cat((word, word_type), dim=0)
+                input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
+                X[i] = input_data
 
-            word = torch.tensor(glove_embs[dataset[i]["word"]] if dataset[i]["word"] in glove_embs else np.zeros(d_embed))
-            word_type = torch.full((d_embed,), 1 if dataset[i]["word_type"] == "N" else 0)
-            word = torch.cat((word, word_type), dim=0)
+            elif model == "rnn":
+                if len(sentence_one) > 30:
+                    print("Sentence one too long")
+                    sentence_one = sentence_one[:30]
+                else:
+                    sentence_one = torch.cat((sentence_one, torch.zeros((30 - len(sentence_one), d_embed))), dim=0)
 
-            input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
-            X[i] = input_data
+                if len(sentence_two) > 30:
+                    sentence_two = sentence_two[:25]
+                else:
+                    sentence_two = torch.cat((sentence_two, torch.zeros((30 - len(sentence_two), d_embed))), dim=0)
+
+                word = word.unsqueeze(0)
+                input_data = torch.cat((word, sentence_one, word, sentence_two, word, word), dim=0)
+                X[i] = input_data
+
+            
 
         dataset = torch.utils.data.TensorDataset(X, Y)
         return dataset
@@ -90,11 +111,11 @@ if __name__ == "__main__":
         else:
             model = LSTM().to(torch_device)
 
-    train_dataset = get_X_Y_dataset(dataset)
+    train_dataset = get_X_Y_dataset(dataset, model=args.neural_arch)
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=256, shuffle=True)
     loss = torch.nn.BCELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
-    n_epochs = 320
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    n_epochs = 85
     
     for epoch in range(n_epochs):
         loss_avg = 0
@@ -115,10 +136,10 @@ if __name__ == "__main__":
     dev_accuracy = 0
 
     test_dataset = WiCDataset(type="test")
-    test_dataset = get_X_Y_dataset(test_dataset)
+    test_dataset = get_X_Y_dataset(test_dataset, model=args.neural_arch)
 
     dev_dataset = WiCDataset(type="dev")
-    dev_dataset = get_X_Y_dataset(dev_dataset)
+    dev_dataset = get_X_Y_dataset(dev_dataset, model=args.neural_arch)
 
     with torch.no_grad():
         Y_pred_train = model(train_dataset.tensors[0])
