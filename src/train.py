@@ -52,9 +52,9 @@ if __name__ == "__main__":
         Y = torch.tensor(np.array([data["output"] for data in dataset])).reshape(-1, 1).float()
 
         if model == "dan":
-            X = torch.zeros((len(dataset), d_embed * 4))
+            X = torch.zeros((len(dataset), d_embed * 2))
         if model == "rnn" or model == "lstm":
-            X = torch.zeros((len(dataset), 61, d_embed))
+            X = torch.zeros((len(dataset), 60, d_embed))
 
         for i in range(len(dataset)):
             sentence_one = dataset[i]["sentence_one"]
@@ -73,12 +73,10 @@ if __name__ == "__main__":
                 sentence_two[j] = sentence_two[j] + get_positional_encoding(j, d_embed)
             
             if model == "dan":
-                # normalize the sentence embeddings
-
                 sentence_one = sentence_one.mean(dim=0)
                 sentence_two = sentence_two.mean(dim=0)
                 word = torch.cat((word_type, word), dim=0)
-                input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
+                input_data = torch.cat((sentence_one, sentence_two), dim=0)
                 X[i] = input_data
 
             elif model == "rnn" or model == "lstm":
@@ -94,7 +92,7 @@ if __name__ == "__main__":
                     sentence_two = torch.cat((sentence_two, torch.zeros((30 - len(sentence_two), d_embed))), dim=0)
 
                 word = word.unsqueeze(0)
-                input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
+                input_data = torch.cat((sentence_one, sentence_two), dim=0)
                 X[i] = input_data
 
         dataset = torch.utils.data.TensorDataset(X, Y)
@@ -118,16 +116,16 @@ if __name__ == "__main__":
     n_epochs = None
 
     if args.neural_arch == "dan":
-        learning_rate = 0.0001
+        learning_rate = 1e-4
         batch_size = 32
         n_epochs = 150
     elif args.neural_arch == "rnn":
         learning_rate = 0.001
         batch_size = 32
-        n_epochs = 60
+        n_epochs = 90
     elif args.neural_arch == "lstm":
-        learning_rate = 0.0005
-        batch_size = 32
+        learning_rate = 0.001
+        batch_size = 64
         n_epochs = 40
 
     train_dataset = get_X_Y_dataset(dataset, model=args.neural_arch)
@@ -137,7 +135,7 @@ if __name__ == "__main__":
 
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     loss = torch.nn.BCELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=1e-4)
 
     training_loss = []
     val_loss = []
@@ -168,7 +166,7 @@ if __name__ == "__main__":
             loss_avg += loss_val.item()
 
         print(f"Epoch: {epoch + 1}, Loss: {loss_avg / len(dataloader)}")
-        #val_loss.append(validation_loss(model))
+        val_loss.append(validation_loss(model))
         training_loss.append(loss_avg / len(dataloader))
 
     train_accuracy = 0
@@ -197,12 +195,10 @@ if __name__ == "__main__":
     print(f"Test Accuracy: {test_accuracy }")
     print(f"Dev Accuracy: {dev_accuracy }")
     print("------------------------------------------\n")
-    '''
+
     plt.plot(training_loss, label="Training Loss")
     plt.plot(val_loss, label="Validation Loss")
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
     plt.legend()
     plt.show()
-    '''
-    
