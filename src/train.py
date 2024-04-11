@@ -47,14 +47,15 @@ if __name__ == "__main__":
         Y = torch.tensor(np.array([data["output"] for data in dataset])).reshape(-1, 1).float()
 
         for i in range(len(dataset)):
-            sentence_one = dataset[i]["sentence_one"]
-            sentence_two = dataset[i]["sentence_two"]
-            sentence_one = np.array(word for word in sentence_one.split())
-            sentence_two = np.array(word for word in sentence_two.split())
-            word = glove_embs[dataset[i]["word"]]
-            word_type = glove_embs[dataset[i]["word_type"]]
+            sentence_one = dataset.__getitem__(i)["sentence_one"]
+            sentence_two = dataset.__getitem__(i)["sentence_two"]
+            sentence_one = np.array([word for word in sentence_one.split()])
+            sentence_two = np.array([word for word in sentence_two.split()])
+            word = [dataset.__getitem__(i)["word"]]
+            word_type = [dataset.__getitem__(i)["word_type"]]
             
             if model == "dan":
+                print(sentence_one, sentence_two, word, word_type)
                 X = np.concatenate((sentence_one, sentence_two, word, word_type), axis=0)
 
             elif model == "rnn" or model == "lstm":
