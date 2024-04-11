@@ -115,16 +115,16 @@ if __name__ == "__main__":
 
     if args.neural_arch == "dan":
         learning_rate = 0.001
-        batch_size = 256
+        batch_size = 32
         n_epochs = 60
     elif args.neural_arch == "rnn":
         learning_rate = 0.0005
-        batch_size = 256
-        n_epochs = 200
+        batch_size = 32
+        n_epochs = 60
     elif args.neural_arch == "lstm":
         learning_rate = 0.0005
-        batch_size = 256
-        n_epochs = 110
+        batch_size = 32
+        n_epochs = 40
 
     train_dataset = get_X_Y_dataset(dataset, model=args.neural_arch)
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
