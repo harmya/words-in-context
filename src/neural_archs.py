@@ -20,21 +20,21 @@ class RNN(torch.nn.Module):
 
         self.rnn = torch.nn.RNN(input_size=d_embeddings, hidden_size=32, num_layers=1, batch_first=True, bidirectional=bidirectional)
         self.linear_for_rnns = torch.nn.Linear(32 * 2 * num_directions, 32)
-        self.linear = torch.nn.Linear(32, 32)
         self.output_layer = torch.nn.Linear(32, 1)
 
     def forward(self, x):
         output_1, hidden_1 = self.rnn(x[:, :30, :])
         output_2, hidden_2 = self.rnn(x[:, 30:60, :])
         combined_hidden = torch.relu(self.linear_for_rnns(torch.cat((output_1[:, -1], output_2[:, -1]), dim=1)))
-        return torch.sigmoid(self.output_layer(torch.relu(self.linear(combined_hidden))))
+        return torch.sigmoid(self.output_layer(combined_hidden))
 
 
 class LSTM(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, bidirectional=False):
         super(LSTM, self).__init__()
-        self.lstm = torch.nn.LSTM(input_size=d_embeddings, hidden_size=32, num_layers=1, batch_first=True, bidirectional=True)
-        self.linear_hidden_sent = torch.nn.Linear(64 * 2, 32)
+        num_directions = 2 if bidirectional else 1
+        self.lstm = torch.nn.LSTM(input_size=d_embeddings, hidden_size=64, num_layers=1, batch_first=True, bidirectional=bidirectional)
+        self.linear_hidden_sent = torch.nn.Linear(64 * 2 * num_directions, 32)
         self.linear_hidden = torch.nn.Linear(32, 32)
         self.output_layer = torch.nn.Linear(32, 1)
 

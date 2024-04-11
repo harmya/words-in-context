@@ -106,7 +106,7 @@ if __name__ == "__main__":
             model = RNN().to(torch_device)
     elif args.neural_arch == "lstm":
         if args.rnn_bidirect:
-            model = LSTM().to(torch_device)
+            model = LSTM(bidirectional=True).to(torch_device)
         else:
             model = LSTM().to(torch_device)
 
@@ -120,12 +120,12 @@ if __name__ == "__main__":
         n_epochs = 280
     elif args.neural_arch == "rnn":
         learning_rate = 0.001
-        batch_size = 128
-        n_epochs = 50
+        batch_size = 256
+        n_epochs = 100
     elif args.neural_arch == "lstm":
         learning_rate = 0.001
-        batch_size = 128
-        n_epochs = 70
+        batch_size = 256
+        n_epochs = 45
 
     train_dataset = get_X_Y_dataset(dataset, model=args.neural_arch)
 
