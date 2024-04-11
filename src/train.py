@@ -40,59 +40,38 @@ if __name__ == "__main__":
     print("Embedding size: ", d_embed)
     vocob_size = len(glove_embs.key_to_index)
     print("Vocab size: ", vocob_size)
-    dataset = WiCDataset(type="train")
-    
 
-
-    def get_X_Y_dataset(dataset, model=None):
+    def get_X_Y_dataset(model=None, type="train"):
+        dataset = WiCDataset(type=type)
         X = None
         Y = torch.tensor(np.array([data["output"] for data in dataset])).reshape(-1, 1).float()
-
-        if model == "dan":
-            X = torch.zeros((len(dataset), d_embed * 4))
-        if model == "rnn" or model == "lstm":
-            X = torch.zeros((len(dataset), 61, d_embed))
 
         for i in range(len(dataset)):
             sentence_one = dataset[i]["sentence_one"]
             sentence_two = dataset[i]["sentence_two"]
-            sentence_one = torch.tensor(np.array([glove_embs[word] for word in sentence_one.split() if word in glove_embs]))
-            sentence_two = torch.tensor(np.array([glove_embs[word] for word in sentence_two.split() if word in glove_embs]))
-            one_idx = dataset[i]["one_index"]
-            two_idx = dataset[i]["two_index"]
-            word = torch.tensor(glove_embs[dataset[i]["word"]] if dataset[i]["word"] in glove_embs else np.zeros(d_embed))
-            word_type = torch.full((d_embed,), 1 if dataset[i]["word_type"] == "N" else 0)
-            
-            for j in range(len(sentence_one)):
-                sentence_one[j] = sentence_one[j] + get_positional_encoding(j, d_embed)
-            
-            for j in range(len(sentence_two)):
-                sentence_two[j] = sentence_two[j] + get_positional_encoding(j, d_embed)
+            sentence_one = np.array(word for word in sentence_one.split())
+            sentence_two = np.array(word for word in sentence_two.split())
+            word = glove_embs[dataset[i]["word"]]
+            word_type = glove_embs[dataset[i]["word_type"]]
             
             if model == "dan":
-                sentence_one = sentence_one.mean(dim=0)
-                sentence_two = sentence_two.mean(dim=0)
-                word = torch.cat((word_type, word), dim=0)
-                input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
-                X[i] = input_data
+                X = np.concatenate((sentence_one, sentence_two, word, word_type), axis=0)
 
             elif model == "rnn" or model == "lstm":
                 if len(sentence_one) > 30:
                     print("Sentence one too long")
                     sentence_one = sentence_one[:30]
                 else:
-                    sentence_one = torch.cat((sentence_one, torch.zeros((30 - len(sentence_one), d_embed))), dim=0)
+                    sentence_one = np.concatenate((sentence_one, np.zeros((30 - len(sentence_one), d_embed))), axis=0)
 
                 if len(sentence_two) > 30:
-                    sentence_two = sentence_two[:25]
+                    sentence_two = sentence_two[:30]
                 else:
-                    sentence_two = torch.cat((sentence_two, torch.zeros((30 - len(sentence_two), d_embed))), dim=0)
+                    sentence_two = np.concatenate((sentence_two, np.zeros((30 - len(sentence_two), d_embed))), axis=0)
 
-                word = word.unsqueeze(0)
-                input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
-                X[i] = input_data
+                X = np.concatenate((sentence_one, sentence_two, word), axis=0)
 
-        dataset = torch.utils.data.TensorDataset(X, Y)
+        dataset = X, Y
         return dataset
 
     if args.neural_arch == "dan":
@@ -125,10 +104,10 @@ if __name__ == "__main__":
         batch_size = 32
         n_epochs = 40
 
-    train_dataset = get_X_Y_dataset(dataset, model=args.neural_arch)
+    train_dataset = get_X_Y_dataset(model=args.neural_arch)
+    print("Train dataset size: ", len(train_dataset[0]))
+    print(train_dataset[:10])
 
-    dev_dataset = WiCDataset(type="dev")
-    dev_dataset = get_X_Y_dataset(dev_dataset, model=args.neural_arch)
 
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     loss = torch.nn.BCELoss()
