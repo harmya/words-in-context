@@ -94,7 +94,7 @@ if __name__ == "__main__":
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=256, shuffle=True)
     loss = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
-    n_epochs = 350
+    n_epochs = 400
     
     for epoch in range(n_epochs):
         loss_avg = 0
