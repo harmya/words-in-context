@@ -106,7 +106,7 @@ if __name__ == "__main__":
             model = RNN().to(torch_device)
     elif args.neural_arch == "lstm":
         if args.rnn_bidirect:
-            model = LSTM(bidirectional=True).to(torch_device)
+            model = LSTM().to(torch_device)
         else:
             model = LSTM().to(torch_device)
 
@@ -117,15 +117,15 @@ if __name__ == "__main__":
     if args.neural_arch == "dan":
         learning_rate = 1e-4
         batch_size = 256
-        n_epochs = 280
+        n_epochs = 155
     elif args.neural_arch == "rnn":
         learning_rate = 0.001
-        batch_size = 256
-        n_epochs = 100
+        batch_size = 128
+        n_epochs = 50
     elif args.neural_arch == "lstm":
         learning_rate = 0.001
-        batch_size = 256
-        n_epochs = 45
+        batch_size = 128
+        n_epochs = 70
 
     train_dataset = get_X_Y_dataset(dataset, model=args.neural_arch)
 
@@ -143,9 +143,6 @@ if __name__ == "__main__":
     val_loss = []
     t_loss = []
 
-    val_accuracy = []
-    t_accuracy = []
-
     def validation_loss(model):
         val_dataloader = torch.utils.data.DataLoader(dev_dataset, batch_size=batch_size, shuffle=True)
         with torch.no_grad():
@@ -157,7 +154,7 @@ if __name__ == "__main__":
                 loss_val = loss(Y_pred, Y)
                 loss_avg += loss_val.item()
             return loss_avg / len(val_dataloader)
-
+    
     def test_loss(model):
         test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
         with torch.no_grad():
@@ -169,29 +166,21 @@ if __name__ == "__main__":
                 loss_val = loss(Y_pred, Y)
                 loss_avg += loss_val.item()
             return loss_avg / len(test_dataloader)
-    
-    def test_accuracy(model):
-        test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+    def accuracies():
         with torch.no_grad():
-            acc = 0
-            for i, (X, Y) in enumerate(test_dataloader):
-                X = X.to(torch_device)
-                Y = Y.to(torch_device)
-                Y_pred = model(X)
-                acc += sum(torch.round(Y_pred) == Y)[0]
-            return acc / len(test_dataset)
-    
-    def val_accuracy(model):
-        val_dataloader = torch.utils.data.DataLoader(dev_dataset, batch_size=batch_size, shuffle=True)
-        with torch.no_grad():
-            acc = 0
-            for i, (X, Y) in enumerate(val_dataloader):
-                X = X.to(torch_device)
-                Y = Y.to(torch_device)
-                Y_pred = model(X)
-                acc += sum(torch.round(Y_pred) == Y)[0]
-            return acc / len(dev_dataset)
-    
+            Y_pred_train = model(train_dataset.tensors[0])
+            Y_train = train_dataset.tensors[1]
+            train_accuracy = sum(torch.round(Y_pred_train) == Y_train)[0] / len(train_dataset)
+
+            Y_pred_test = model(test_dataset.tensors[0])
+            Y_test = test_dataset.tensors[1]
+            test_accuracy = sum(torch.round(Y_pred_test) == Y_test)[0] / len(test_dataset)
+
+            Y_pred_dev = model(dev_dataset.tensors[0])
+            Y_dev = dev_dataset.tensors[1]
+            dev_accuracy = sum(torch.round(Y_pred_dev) == Y_dev)[0] / len(dev_dataset)
+        
+        return train_accuracy, test_accuracy, dev_accuracy, Y_pred_test
 
     for epoch in range(n_epochs):
         loss_avg = 0
@@ -206,29 +195,16 @@ if __name__ == "__main__":
             optimizer.step()
             loss_avg += loss_val.item()
 
-        print(f"Epoch: {epoch + 1}, Loss: {loss_avg / len(dataloader)}")
         val_loss.append(validation_loss(model))
         training_loss.append(loss_avg / len(dataloader))
         t_loss.append(test_loss(model))
-        val_accuracy.append(val_accuracy(model))
-        t_accuracy.append(test_accuracy(model))
+        print(f"Epoch: {epoch + 1}, Training Loss: {training_loss[-1]}")
 
     train_accuracy = 0
     test_accuracy = 0
     dev_accuracy = 0
-
-    with torch.no_grad():
-        Y_pred_train = model(train_dataset.tensors[0])
-        Y_train = train_dataset.tensors[1]
-        train_accuracy = sum(torch.round(Y_pred_train) == Y_train)[0] / len(train_dataset)
-
-        Y_pred_test = model(test_dataset.tensors[0])
-        Y_test = test_dataset.tensors[1]
-        test_accuracy = sum(torch.round(Y_pred_test) == Y_test)[0] / len(test_dataset)
-
-        Y_pred_dev = model(dev_dataset.tensors[0])
-        Y_dev = dev_dataset.tensors[1]
-        dev_accuracy = sum(torch.round(Y_pred_dev) == Y_dev)[0] / len(dev_dataset)
+    
+    train_accuracy, test_accuracy, dev_accuracy, Y_pred_test = accuracies()
     
     print("\n------------------------------------------")
     print(f"Neural Architecture: {args.neural_arch}")
@@ -243,8 +219,9 @@ if __name__ == "__main__":
             label = "T" if Y_pred_test[i] > 0.5 else "F"
             f.write(f"{label}\n")
         
-    plt.plot(test_accuracy, label="Test Accuracy")
-    plt.plot(val_accuracy, label="Validation Accuracy")
+    plt.plot(training_loss, label="Training Loss")
+    plt.plot(val_loss, label="Validation Loss")
+    plt.plot(t_loss, label="Test Loss")
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
     plt.legend()
