@@ -150,7 +150,7 @@ if __name__ == "__main__":
     
     for epoch in range(n_epochs):
         loss_avg = 0
-        total_items = batch_size * len(dataloader)
+
         for i, (X, Y) in enumerate(dataloader):
             X = X.to(torch_device)
             Y = Y.to(torch_device)
@@ -163,7 +163,7 @@ if __name__ == "__main__":
 
         
         val_loss.append(validation_loss(model))
-        training_loss.append(loss_avg / total_items)
+        training_loss.append(loss_avg / len(dataloader))
 
     train_accuracy = 0
     test_accuracy = 0
