@@ -7,8 +7,8 @@ import re
 class WiCDataset(Dataset):
     def __init__(self, type="train"):
         self.data = []
-        train_data = None
-        train_data_output = None
+        data_path = None
+        data_output_path = None
         self.word_to_index = {}
 
         if type == "train":

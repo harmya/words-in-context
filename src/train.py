@@ -32,6 +32,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    dataset = WiCDataset(type=type)
+
     glove_embs = None
     word_to_index = None
 
@@ -40,16 +42,16 @@ if __name__ == "__main__":
         word_to_index = {word: glove_embs.key_to_index[word] for word in glove_embs.key_to_index}
     else:
         glove_embs = None
+        word_to_index = dataset.word_to_index
 
-    d_embed = glove_embs.vector_size
+    d_embed = glove_embs.vector_size if args.init_word_embs == "glove" else 50
     print("Embedding size: ", d_embed)
-    vocab_size = len(glove_embs.key_to_index)
+    vocab_size = len(word_to_index)
     print("Vocab size: ", vocab_size)
 
-
+    exit()
 
     def get_X_Y_dataset(model=None, type="train"):
-        dataset = WiCDataset(type=type)
         X = np.array([])
         Y = torch.tensor(np.array([data["output"] for data in dataset])).reshape(-1, 1).float()
 
