@@ -18,6 +18,7 @@ import gensim.downloader as api
 
 from neural_archs import DAN, RNN, LSTM
 from utils import WiCDataset
+import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
 
@@ -136,6 +137,9 @@ if __name__ == "__main__":
     loss = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
+    training_loss = []
+    val_loss = []
+
     def validation_loss(model):
         with torch.no_grad():
             dataset = dev_dataset
@@ -146,6 +150,7 @@ if __name__ == "__main__":
     
     for epoch in range(n_epochs):
         loss_avg = 0
+        total_items = batch_size * len(dataloader)
         for i, (X, Y) in enumerate(dataloader):
             X = X.to(torch_device)
             Y = Y.to(torch_device)
@@ -156,10 +161,9 @@ if __name__ == "__main__":
             optimizer.step()
             loss_avg += loss_val.item()
 
-        if epoch % 5 == 0:
-            print(f"Validation loss: {validation_loss(model)}")
         
-        #print(f"Epoch: {epoch} Loss: {loss_avg / len(dataloader)}")
+        val_loss.append(validation_loss(model))
+        training_loss.append(loss_avg / total_items)
 
     train_accuracy = 0
     test_accuracy = 0
@@ -187,4 +191,11 @@ if __name__ == "__main__":
     print(f"Test Accuracy: {test_accuracy }")
     print(f"Dev Accuracy: {dev_accuracy }")
     print("------------------------------------------\n")
+
+    plt.plot(training_loss, label="Training Loss")
+    plt.plot(val_loss, label="Validation Loss")
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.show()
     

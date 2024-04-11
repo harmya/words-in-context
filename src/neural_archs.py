@@ -5,12 +5,14 @@ d_embeddings = 50
 class DAN(torch.nn.Module):
     def __init__(self):
         super(DAN, self).__init__()
-        self.first_layer = torch.nn.Linear(4 * d_embeddings, 64)
-        self.second_hidden_layer = torch.nn.Linear(64, 32)
-        self.output_layer = torch.nn.Linear(32, 1)
+        self.first_layer = torch.nn.Linear(4 * d_embeddings, 512)
+        self.dropout = torch.nn.Dropout(0.5)
+        self.second_hidden_layer = torch.nn.Linear(512, 512)
+        self.dropout2 = torch.nn.Dropout(0.5)
+        self.output_layer = torch.nn.Linear(512, 1)
 
     def forward(self, x):
-        return torch.sigmoid(self.output_layer(torch.relu(self.second_hidden_layer(torch.relu(self.first_layer(x))))))
+        return torch.sigmoid(self.output_layer(self.dropout2(torch.relu(self.second_hidden_layer(self.dropout(torch.relu(self.first_layer(x))))))))
 
 class RNN(torch.nn.Module):
     def __init__(self):
