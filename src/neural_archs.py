@@ -2,9 +2,18 @@ import torch
 
 d_embeddings = 50
 
+def get_positional_encoding(k, d_embed):
+    return torch.tensor([np.sin(k / 10000 ** (2 * i / d_embed)) 
+        if i % 2 == 0 else np.cos(k / 10000 ** (2 * i / d_embed)) for i in range(d_embed)])
+
 class DAN(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, pre_trained=False, embedding_matrix=None, vocob_size=None):
         super(DAN, self).__init__()
+        if pre_trained:
+            self.embedding = torch.nn.Embedding.from_pretrained(embedding_matrix)
+        else:
+            self.embedding = torch.nn.Embedding(vocob_size, d_embeddings)
+
         self.first_layer = torch.nn.Linear(4 * d_embeddings, 512)
         self.dropout = torch.nn.Dropout(0.5)
         self.second_hidden_layer = torch.nn.Linear(512, 512)
@@ -12,7 +21,10 @@ class DAN(torch.nn.Module):
         self.output_layer = torch.nn.Linear(512, 1)
 
     def forward(self, x):
-        return torch.sigmoid(self.output_layer(self.dropout2(torch.relu(self.second_hidden_layer(self.dropout(torch.relu(self.first_layer(x))))))))
+        sentence_one = torch.mean(self.embedding(x[:, :30]), dim=1)
+        print(sentence_one.shape)
+        sentence_two = torch.mean(self.embedding(x[:, 30:60]), dim=1)
+        word = self.embedding(x[:, 60])
 
 class RNN(torch.nn.Module):
     def __init__(self):

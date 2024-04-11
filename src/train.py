@@ -42,12 +42,9 @@ if __name__ == "__main__":
     print("Vocab size: ", vocob_size)
     dataset = WiCDataset(type="train")
     
-    def get_positional_encoding(k, d_embed):
-        return torch.tensor([np.sin(k / 10000 ** (2 * i / d_embed)) 
-            if i % 2 == 0 else np.cos(k / 10000 ** (2 * i / d_embed)) for i in range(d_embed)])
+
 
     def get_X_Y_dataset(dataset, model=None):
-        
         X = None
         Y = torch.tensor(np.array([data["output"] for data in dataset])).reshape(-1, 1).float()
 
