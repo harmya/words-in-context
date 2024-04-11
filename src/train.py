@@ -41,7 +41,6 @@ if __name__ == "__main__":
     vocob_size = len(glove_embs.key_to_index)
     print("Vocab size: ", vocob_size)
     dataset = WiCDataset(type="train")
-    
 
     def get_positional_encoding(k, d_embed):
         return torch.tensor([np.sin(k / 10000 ** (2 * i / d_embed)) 
