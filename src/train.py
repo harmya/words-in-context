@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    dataset = WiCDataset(type=type)
+    dataset = WiCDataset(type="train")
 
     glove_embs = None
     word_to_index = None
@@ -48,8 +48,6 @@ if __name__ == "__main__":
     print("Embedding size: ", d_embed)
     vocab_size = len(word_to_index)
     print("Vocab size: ", vocab_size)
-
-    exit()
 
     def get_X_Y_dataset(model=None, type="train"):
         X = np.array([])
