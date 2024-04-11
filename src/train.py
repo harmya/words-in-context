@@ -74,40 +74,42 @@ if __name__ == "__main__":
         dataset = X, Y
         return dataset
 
-    if args.neural_arch == "dan":
-        model = DAN().to(torch_device)
-    elif args.neural_arch == "rnn":
-        if args.rnn_bidirect:
-            model = RNN().to(torch_device)
-        else:
-            model = RNN().to(torch_device)
-    elif args.neural_arch == "lstm":
-        if args.rnn_bidirect:
-            model = LSTM().to(torch_device)
-        else:
-            model = LSTM().to(torch_device)
+    train_dataset = get_X_Y_dataset(model=args.neural_arch)
+    print("Train dataset size: ", len(train_dataset[0]))
+    print(train_dataset[:10])
+
 
     learning_rate = None 
     batch_size = None
     n_epochs = None
 
     if args.neural_arch == "dan":
+        model = DAN().to(torch_device)
         learning_rate = 0.0001
         batch_size = 32
         n_epochs = 200
     elif args.neural_arch == "rnn":
-        learning_rate = 0.001
-        batch_size = 32
-        n_epochs = 60
+        if args.rnn_bidirect:
+            model = RNN().to(torch_device)
+            learning_rate = 0.001
+            batch_size = 32
+            n_epochs = 60
+        else:
+            model = RNN().to(torch_device)
+            learning_rate = 0.001
+            batch_size = 32
+            n_epochs = 60
     elif args.neural_arch == "lstm":
-        learning_rate = 0.0005
-        batch_size = 32
-        n_epochs = 40
-
-    train_dataset = get_X_Y_dataset(model=args.neural_arch)
-    print("Train dataset size: ", len(train_dataset[0]))
-    print(train_dataset[:10])
-
+        if args.rnn_bidirect:
+            model = LSTM().to(torch_device)
+            learning_rate = 0.0005
+            batch_size = 32
+            n_epochs = 40
+        else:
+            model = LSTM().to(torch_device)
+            learning_rate = 0.0005
+            batch_size = 32
+            n_epochs = 40
 
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     loss = torch.nn.BCELoss()
