@@ -33,7 +33,5 @@ class LSTM(torch.nn.Module):
         self.linear_1 = torch.nn.Linear(64, 32)
         self.output_layer = torch.nn.Linear(32, 1)
 
-
-
     def forward(self, x):
         return torch.sigmoid(self.output_layer(torch.relu(self.linear_1(self.lstm(x)[0][:, -1, :]))))
