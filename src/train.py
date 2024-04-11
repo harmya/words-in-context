@@ -63,7 +63,7 @@ if __name__ == "__main__":
             two_idx = dataset[i]["two_index"]
             word = torch.tensor(glove_embs[dataset[i]["word"]] if dataset[i]["word"] in glove_embs else np.zeros(d_embed))
             word_type = torch.full((d_embed,), 1 if dataset[i]["word_type"] == "N" else 0)
-
+            
             for j in range(len(sentence_one)):
                 sentence_one[j] = sentence_one[j] + get_positional_encoding(j, d_embed)
             
