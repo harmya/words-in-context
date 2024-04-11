@@ -132,6 +132,9 @@ if __name__ == "__main__":
     dev_dataset = WiCDataset(type="dev")
     dev_dataset = get_X_Y_dataset(dev_dataset, model=args.neural_arch)
 
+    test_dataset = WiCDataset(type="test")
+    test_dataset = get_X_Y_dataset(test_dataset, model=args.neural_arch)
+
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     loss = torch.nn.BCELoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
@@ -150,6 +153,17 @@ if __name__ == "__main__":
                 loss_val = loss(Y_pred, Y)
                 loss_avg += loss_val.item()
             return loss_avg / len(val_dataloader)
+    def test_loss(model):
+        test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+        with torch.no_grad():
+            loss_avg = 0
+            for i, (X, Y) in enumerate(test_dataloader):
+                X = X.to(torch_device)
+                Y = Y.to(torch_device)
+                Y_pred = model(X)
+                loss_val = loss(Y_pred, Y)
+                loss_avg += loss_val.item()
+            return loss_avg / len(test_dataloader)
     
     for epoch in range(n_epochs):
         loss_avg = 0
@@ -171,9 +185,6 @@ if __name__ == "__main__":
     train_accuracy = 0
     test_accuracy = 0
     dev_accuracy = 0
-
-    test_dataset = WiCDataset(type="test")
-    test_dataset = get_X_Y_dataset(test_dataset, model=args.neural_arch)
 
     with torch.no_grad():
         Y_pred_train = model(train_dataset.tensors[0])
