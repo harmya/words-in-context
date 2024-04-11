@@ -52,7 +52,7 @@ if __name__ == "__main__":
         if model == "dan":
             X = torch.zeros((len(dataset), d_embed * 4))
         if model == "rnn" or model == "lstm":
-            X = torch.zeros((len(dataset), 64, d_embed))
+            X = torch.zeros((len(dataset), 61, d_embed))
 
         for i in range(len(dataset)):
             sentence_one = dataset[i]["sentence_one"]
@@ -73,7 +73,7 @@ if __name__ == "__main__":
             if model == "dan":
                 sentence_one = sentence_one.mean(dim=0)
                 sentence_two = sentence_two.mean(dim=0)
-                word = torch.cat((word, word_type), dim=0)
+                word = torch.cat((word_type, word), dim=0)
                 input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
                 X[i] = input_data
 
@@ -90,10 +90,8 @@ if __name__ == "__main__":
                     sentence_two = torch.cat((sentence_two, torch.zeros((30 - len(sentence_two), d_embed))), dim=0)
 
                 word = word.unsqueeze(0)
-                input_data = torch.cat((word, word, sentence_one, sentence_two, word, word), dim=0)
+                input_data = torch.cat((sentence_one, sentence_two, word), dim=0)
                 X[i] = input_data
-
-            
 
         dataset = torch.utils.data.TensorDataset(X, Y)
         return dataset
@@ -118,15 +116,15 @@ if __name__ == "__main__":
     if args.neural_arch == "dan":
         learning_rate = 0.001
         batch_size = 256
-        n_epochs = 80
+        n_epochs = 60
     elif args.neural_arch == "rnn":
         learning_rate = 0.0005
         batch_size = 256
-        n_epochs = 160
+        n_epochs = 200
     elif args.neural_arch == "lstm":
         learning_rate = 0.0005
         batch_size = 256
-        n_epochs = 140
+        n_epochs = 110
 
     train_dataset = get_X_Y_dataset(dataset, model=args.neural_arch)
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
