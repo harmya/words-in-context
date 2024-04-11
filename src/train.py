@@ -32,15 +32,22 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    glove_embs = None
-    if args.init_word_embs == "glove":
-        glove_embs = api.load("glove-wiki-gigaword-50")
-
-    d_embed = glove_embs.vector_size
-    print("Embedding size: ", d_embed)
-    vocob_size = len(glove_embs.key_to_index)
-    print("Vocab size: ", vocob_size)
     dataset = WiCDataset(type="train")
+    d_embed = 50
+    vocab_size = None
+    embs = None
+    random_embedding = args.init_word_embs == "scratch"
+
+    if args.init_word_embs == "glove":
+        embs = api.load("glove-wiki-gigaword-50")
+        vocab_size = len(embs.key_to_index)
+    else:
+        embs = dataset.word_to_index
+        vocab_size = dataset.__vocab_size__
+
+    print("Embedding size: ", d_embed)
+    print("Vocab size: ", vocab_size)
+    
     
 
     def get_positional_encoding(k, d_embed):
@@ -52,18 +59,24 @@ if __name__ == "__main__":
         Y = torch.tensor(np.array([data["output"] for data in dataset])).reshape(-1, 1).float()
 
         if model == "dan":
-            X = torch.zeros((len(dataset), d_embed * 2))
+            if args.init_word_embs == "glove":
+                X = torch.zeros((len(dataset), d_embed * 2))
+            else:
+                X = torch.zeros((len(dataset), 1))
         if model == "rnn" or model == "lstm":
-            X = torch.zeros((len(dataset), 60, d_embed))
+            if args.init_word_embs == "glove":
+                X = torch.zeros((len(dataset), 60, d_embed))
+            else:
+                X = torch.zeros((len(dataset), 60, 1))
 
         for i in range(len(dataset)):
             sentence_one = dataset[i]["sentence_one"]
             sentence_two = dataset[i]["sentence_two"]
-            sentence_one = torch.tensor(np.array([glove_embs[word] for word in sentence_one.split() if word in glove_embs]))
-            sentence_two = torch.tensor(np.array([glove_embs[word] for word in sentence_two.split() if word in glove_embs]))
+            sentence_one = torch.tensor(np.array([embs[word] for word in sentence_one.split() if random_embedding or word in embs]))
+            sentence_two = torch.tensor(np.array([embs[word] for word in sentence_two.split() if random_embedding or word in embs]))
             one_idx = dataset[i]["one_index"]
             two_idx = dataset[i]["two_index"]
-            word = torch.tensor(glove_embs[dataset[i]["word"]] if dataset[i]["word"] in glove_embs else np.zeros(d_embed))
+            word = torch.tensor(embs[dataset[i]["word"]] if dataset[i]["word"] in embs else np.zeros(d_embed))
             word_type = torch.full((d_embed,), 1 if dataset[i]["word_type"] == "N" else 0)
             
             for j in range(len(sentence_one)):

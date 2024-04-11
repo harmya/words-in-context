@@ -10,6 +10,7 @@ class WiCDataset(Dataset):
         data_path = None
         data_output_path = None
         self.word_to_index = {}
+        self.word_to_index["<PAD>"] = 0
 
         if type == "train":
             data_path = "../train/train.data.txt"
@@ -73,6 +74,3 @@ class WiCDataset(Dataset):
     
     def __vocab_size__(self):
         return len(self.word_to_index)
-
-    def __word_to_index__(self):
-        return self.word_to_index
