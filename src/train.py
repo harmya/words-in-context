@@ -90,7 +90,7 @@ if __name__ == "__main__":
                     sentence_two = torch.cat((sentence_two, torch.zeros((30 - len(sentence_two), d_embed))), dim=0)
 
                 word = word.unsqueeze(0)
-                input_data = torch.cat((word, sentence_one, word, sentence_two, word, word), dim=0)
+                input_data = torch.cat((word, word, sentence_one, sentence_two, word, word), dim=0)
                 X[i] = input_data
 
             
@@ -114,8 +114,8 @@ if __name__ == "__main__":
     train_dataset = get_X_Y_dataset(dataset, model=args.neural_arch)
     dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=256, shuffle=True)
     loss = torch.nn.BCELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    n_epochs = 85
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0005)
+    n_epochs = 150
     
     for epoch in range(n_epochs):
         loss_avg = 0
