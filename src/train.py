@@ -143,6 +143,9 @@ if __name__ == "__main__":
     val_loss = []
     t_loss = []
 
+    val_accuracy = []
+    t_accuracy = []
+
     def validation_loss(model):
         val_dataloader = torch.utils.data.DataLoader(dev_dataset, batch_size=batch_size, shuffle=True)
         with torch.no_grad():
@@ -167,6 +170,29 @@ if __name__ == "__main__":
                 loss_avg += loss_val.item()
             return loss_avg / len(test_dataloader)
     
+    def test_accuracy(model):
+        test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+        with torch.no_grad():
+            acc = 0
+            for i, (X, Y) in enumerate(test_dataloader):
+                X = X.to(torch_device)
+                Y = Y.to(torch_device)
+                Y_pred = model(X)
+                acc += sum(torch.round(Y_pred) == Y)[0]
+            return acc / len(test_dataset)
+    
+    def val_accuracy(model):
+        val_dataloader = torch.utils.data.DataLoader(dev_dataset, batch_size=batch_size, shuffle=True)
+        with torch.no_grad():
+            acc = 0
+            for i, (X, Y) in enumerate(val_dataloader):
+                X = X.to(torch_device)
+                Y = Y.to(torch_device)
+                Y_pred = model(X)
+                acc += sum(torch.round(Y_pred) == Y)[0]
+            return acc / len(dev_dataset)
+    
+
     for epoch in range(n_epochs):
         loss_avg = 0
 
@@ -184,6 +210,8 @@ if __name__ == "__main__":
         val_loss.append(validation_loss(model))
         training_loss.append(loss_avg / len(dataloader))
         t_loss.append(test_loss(model))
+        val_accuracy.append(val_accuracy(model))
+        t_accuracy.append(test_accuracy(model))
 
     train_accuracy = 0
     test_accuracy = 0
@@ -215,9 +243,8 @@ if __name__ == "__main__":
             label = "T" if Y_pred_test[i] > 0.5 else "F"
             f.write(f"{label}\n")
         
-    plt.plot(training_loss, label="Training Loss")
-    plt.plot(val_loss, label="Validation Loss")
-    plt.plot(t_loss, label="Test Loss")
+    plt.plot(test_accuracy, label="Test Accuracy")
+    plt.plot(val_accuracy, label="Validation Accuracy")
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
     plt.legend()
