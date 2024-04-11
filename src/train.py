@@ -116,8 +116,8 @@ if __name__ == "__main__":
 
     if args.neural_arch == "dan":
         learning_rate = 1e-4
-        batch_size = 32
-        n_epochs = 150
+        batch_size = 128
+        n_epochs = 10000
     elif args.neural_arch == "rnn":
         learning_rate = 0.001
         batch_size = 32
