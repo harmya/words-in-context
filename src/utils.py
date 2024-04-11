@@ -7,18 +7,18 @@ import re
 class WiCDataset(Dataset):
     def __init__(self, type="train"):
         self.data = []
-        if type == "train":
-            data_path = "train/train.data.txt"
-            data_output_path = "train/train.gold.txt"
-        elif type == "test":
-            data_path = "test/test.data.txt"
-            data_output_path = "test/test.gold.txt"
-        elif type == "dev":
-            data_path = "dev/dev.data.txt"
-            data_output_path = "dev/dev.gold.txt"
-
         train_data = None
         train_data_output = None
+
+        if type == "train":
+            data_path = "../train/train.data.txt"
+            data_output_path = "../train/train.gold.txt"
+        elif type == "test":
+            data_path = "../test/test.data.txt"
+            data_output_path = "../test/test.gold.txt"
+        elif type == "dev":
+            data_path = "../dev/dev.data.txt"
+            data_output_path = "../dev/dev.gold.txt"
 
         with open(data_output_path, "r") as f:
             train_data_output = f.read()

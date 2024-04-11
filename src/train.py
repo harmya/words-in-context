@@ -35,8 +35,6 @@ if __name__ == "__main__":
     if args.init_word_embs == "glove":
         glove_embs = api.load("glove-wiki-gigaword-50")
 
-    pad_token = glove_embs.keys()
-    print("Pad token: ", pad_token)
     d_embed = glove_embs.vector_size
     print("Embedding size: ", d_embed)
     
@@ -55,16 +53,19 @@ if __name__ == "__main__":
         for i in range(len(dataset)):
             sentence_one = dataset[i]["sentence_one"]
             sentence_two = dataset[i]["sentence_two"]
-
             sentence_one = torch.tensor(np.array([glove_embs[word] for word in sentence_one.split() if word in glove_embs]))
-            sentence_one = sentence_one.mean(dim=0)
-            one_idx_pos_enc = get_positional_encoding(dataset[i]["one_index"], d_embed)
-            sentence_one = sentence_one + one_idx_pos_enc
-
             sentence_two = torch.tensor(np.array([glove_embs[word] for word in sentence_two.split() if word in glove_embs]))
+            one_idx = dataset[i]["one_index"]
+            two_idx = dataset[i]["two_index"]
+            
+            for j in range(len(sentence_one)):
+                sentence_one[j] = sentence_one[j] + get_positional_encoding(j, d_embed)
+            
+            for j in range(len(sentence_two)):
+                sentence_two[j] = sentence_two[j] + get_positional_encoding(j, d_embed)
+            
+            sentence_one = sentence_one.mean(dim=0)
             sentence_two = sentence_two.mean(dim=0)
-            two_idx_pos_enc = get_positional_encoding(dataset[i]["two_index"], d_embed)
-            sentence_two = sentence_two + two_idx_pos_enc
 
             word = torch.tensor(glove_embs[dataset[i]["word"]] if dataset[i]["word"] in glove_embs else np.zeros(d_embed))
             word_type = torch.full((d_embed,), 1 if dataset[i]["word_type"] == "N" else 0)
@@ -90,10 +91,10 @@ if __name__ == "__main__":
             model = LSTM().to(torch_device)
 
     train_dataset = get_X_Y_dataset(dataset)
-    dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
+    dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=256, shuffle=True)
     loss = torch.nn.BCELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    n_epochs = 60
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+    n_epochs = 350
     
     for epoch in range(n_epochs):
         loss_avg = 0
